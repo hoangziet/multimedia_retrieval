@@ -1,10 +1,19 @@
-from utils.query import QueryModel
+from fastapi import FastAPI 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from app.api import endpoints 
+from configs import configs
+import os
 
-if __name__ == "__main__":
-    query_processor = QueryModel()
+app = FastAPI()
+app.include_router(endpoints.router)
 
-    kis_query = "Tìm video có chứa một con mèo"
-    trake_query = "Tìm 4 khoảnh khắc chính khi vận động viên thực hiện cú nhảy: (1) giậm nhảy, (2) bay qua xà, (3) tiếp đất, (4) đứng dậy."
+@app.get("/")
+def root():
+    return FileResponse("frontend.html")
 
-    results = query_processor.run(query=trake_query, task="trake")
-    print(results)
+keyframes_dir = os.path.abspath(configs.KEYFRAMES_DIR)
+app.mount("/keyframes", StaticFiles(directory=keyframes_dir), name="keyframes")
+
+video_dir = os.path.abspath(configs.VIDEO_DIR)
+app.mount("/video", StaticFiles(directory=video_dir), name="video")

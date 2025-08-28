@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multimedia Search</title>
+    <style>
+        .search-container {
+            margin: 20px 0;
+        }
+        .search-options {
+            margin-bottom: 15px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .result-item {
+            text-align: center;
+        }
+        .result-item img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h2>Multimedia Search</h2>
+    <div class="search-container">
+        <div class="search-options">
+            <label>Search Type:</label>
+            <select id="searchType">
+                <option value="kis">Text KIS</option>
+                <option value="qa">Question Answering</option>
+                <option value="trake">Trake</option>
+            </select>
+            
+            <label style="margin-left: 15px;">K value:</label>
+            <select id="kValue">
+                <option value="4">4</option>
+                <option value="8">8</option>
+                <option value="12">12</option>
+                <option value="16">16</option>
+            </select>
+        </div>
+        
+        <form id="searchForm">
+            <input type="text" id="query" placeholder="Enter your query..." style="width: 300px;" required>
+            <button type="submit">Search</button>
+        </form>
+    </div>
+    
+    <div id="results" class="results-grid"></div>
+
+    <script>
+        document.getElementById('searchForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const query = document.getElementById('query').value;
+            const searchType = document.getElementById('searchType').value;
+            const k = parseInt(document.getElementById('kValue').value);
+
+            const res = await fetch(`/${searchType}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({query: query, k: k})
+            });
+
+            const data = await res.json();
+            let html = '';
+
+            if (searchType === 'kis' || searchType === 'qa') {
+                const results = searchType === 'qa' ? data.qa : data.results;
+                results.forEach(item => {
+                    html += `
+                        <div class="result-item">
+                            <img src="${item.image_url}" alt="Keyframe"><br>
+                            <div>
+                                <b>Video:</b> ${item.video_id}<br>
+                                <b>Frame:</b> ${item.frame_idx}<br>
+                                <b>Distance:</b> ${item.distance.toFixed(3)}<br>
+                                ${item.answer ? `<b>Answer:</b> ${item.answer}<br>` : ''}
+                                <a href="${item.video_url}" target="_blank">Watch Video</a>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else if (searchType === 'trake') {
+                Object.entries(data.trake).forEach(([video_id, info]) => {
+                    info.keyframes.forEach((frame, index) => {
+                        html += `
+                            <div class="result-item">
+                                <img src="/keyframes/${video_id}/${frame.frame_idx.toString().padStart(3, '0')}.jpg" alt="Keyframe"><br>
+                                <div>
+                                    <b>Video:</b> ${video_id}<br>
+                                    <b>Frame:</b> ${frame.frame_idx}<br>
+                                    <b>Distance:</b> ${frame.distance.toFixed(3)}<br>
+                                    <b>Moment:</b> ${index + 1}/4<br>
+                                    <a href="/video/${video_id}.mp4" target="_blank">Watch Video</a>
+                                </div>
+                            </div>
+                        `;
+                    });
+                });
+            }
+
+            document.getElementById('results').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -3,6 +3,8 @@ data/
 database/
 debug/
 **/__pycache__/
+.vscode/
+.venv/
 
 # file
 .env
