@@ -1,0 +1,9 @@
+# folder
+data/
+database/
+debug/
+**/__pycache__/
+
+# file
+.env
+test.py
