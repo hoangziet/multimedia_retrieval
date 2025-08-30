@@ -12,7 +12,6 @@ class QAService:
         self.query_cleaner = QueryCleaner()
         self.model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(configs.DEVICE)
         self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        self.qa_model = AnswerModel()
 
     def encode_text(self, texts):
         inputs = self.processor(text=texts, return_tensors="pt", padding=True)
@@ -36,12 +35,10 @@ class QAService:
 
         for dist, idx in zip(distances[0], indices[0]):
             video_id, frame_idx = self.mapping[idx]
-            answer = self.qa_model.get_answer(keyframe_query, video_id, frame_idx)
             frame_idx_str = frame_idx_to_str(frame_idx)
-            # image_url = f"{configs.KEYFRAMES_DIR}/{video_id}/{frame_idx_str}.jpg"
-            # video_url = f"{configs.VIDEO_DIR}/{video_id}.mp4" 
-            image_url = f"/keyframes/{video_id}/{frame_idx_str}.jpg"  
-            video_url = f"/video/{video_id}.mp4" 
+            answer = AnswerModel.get_answer(keyframe_query, video_id, frame_idx)
+            image_url = f"/keyframes/{video_id}/{frame_idx_str}.jpg"
+            video_url = f"/video/{video_id}.mp4"
             qa_results["qa"].append({
                 "video_id": video_id,
                 "frame_idx": frame_idx,
