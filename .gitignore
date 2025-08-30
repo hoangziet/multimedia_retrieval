@@ -9,3 +9,4 @@ debug/
 # file
 .env
 test.py
+queries/
