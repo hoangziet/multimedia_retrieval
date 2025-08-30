@@ -37,10 +37,32 @@
             
             <label style="margin-left: 15px;">K value:</label>
             <select id="kValue">
+                <option value="1">1</option>
                 <option value="4">4</option>
                 <option value="8">8</option>
                 <option value="12">12</option>
                 <option value="16">16</option>
+                <option value="20">20</option>
+                <option value="24">24</option>
+                <option value="28">28</option>
+                <option value="32">32</option>
+                <option value="36">36</option>
+                <option value="40">40</option>
+                <option value="44">44</option>
+                <option value="48">48</option>
+                <option value="52">52</option>
+                <option value="56">56</option>
+                <option value="60">60</option>
+                <option value="64">64</option>
+                <option value="68">68</option>
+                <option value="72">72</option>
+                <option value="76">76</option>
+                <option value="80">80</option>
+                <option value="84">84</option>
+                <option value="88">88</option>
+                <option value="92">92</option>
+                <option value="96">96</option>
+                <option value="100">100</option>
             </select>
         </div>
         
@@ -59,51 +81,62 @@
             const searchType = document.getElementById('searchType').value;
             const k = parseInt(document.getElementById('kValue').value);
 
-            const res = await fetch(`/${searchType}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({query: query, k: k})
-            });
-
-            const data = await res.json();
-            let html = '';
-
-            if (searchType === 'kis' || searchType === 'qa') {
-                const results = searchType === 'qa' ? data.qa : data.results;
-                results.forEach(item => {
-                    html += `
-                        <div class="result-item">
-                            <img src="${item.image_url}" alt="Keyframe"><br>
-                            <div>
-                                <b>Video:</b> ${item.video_id}<br>
-                                <b>Frame:</b> ${item.frame_idx}<br>
-                                <b>Distance:</b> ${item.distance.toFixed(3)}<br>
-                                ${item.answer ? `<b>Answer:</b> ${item.answer}<br>` : ''}
-                                <a href="${item.video_url}" target="_blank">Watch Video</a>
-                            </div>
-                        </div>
-                    `;
+            document.getElementById('results').innerHTML = '<p>Searching...</p>';
+            
+            try {
+                const res = await fetch(`/${searchType}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: query, k: k})
                 });
-            } else if (searchType === 'trake') {
-                Object.entries(data.trake).forEach(([video_id, info]) => {
-                    info.keyframes.forEach((frame, index) => {
+
+                if (!res.ok) {
+                    throw new Error(`Server responded with status: ${res.status}`);
+                }
+
+                const data = await res.json();
+                let html = '';
+
+                if (searchType === 'kis' || searchType === 'qa') {
+                    const results = searchType === 'qa' ? data.qa : data.results;
+                    results.forEach(item => {
                         html += `
                             <div class="result-item">
-                                <img src="/keyframes/${video_id}/${frame.frame_idx.toString().padStart(3, '0')}.jpg" alt="Keyframe"><br>
+                                <img src="${item.image_url}" alt="Keyframe"><br>
                                 <div>
-                                    <b>Video:</b> ${video_id}<br>
-                                    <b>Frame:</b> ${frame.frame_idx}<br>
-                                    <b>Distance:</b> ${frame.distance.toFixed(3)}<br>
-                                    <b>Moment:</b> ${index + 1}/4<br>
-                                    <a href="/video/${video_id}.mp4" target="_blank">Watch Video</a>
+                                    <b>Video:</b> ${item.video_id}<br>
+                                    <b>Frame:</b> ${item.frame_idx}<br>
+                                    <b>Distance:</b> ${item.distance.toFixed(3)}<br>
+                                    ${item.answer ? `<b>Answer:</b> ${item.answer}<br>` : ''}
+                                    <a href="${item.video_url}" target="_blank">Watch Video</a>
                                 </div>
                             </div>
                         `;
                     });
-                });
-            }
+                } else if (searchType === 'trake') {
+                    Object.entries(data.trake).forEach(([video_id, info]) => {
+                        info.keyframes.forEach((frame, index) => {
+                            html += `
+                                <div class="result-item">
+                                    <img src="${frame.image_url}" alt="Keyframe"><br>
+                                    <div>
+                                        <b>Video:</b> ${video_id}<br>
+                                        <b>Frame:</b> ${frame.frame_idx}<br>
+                                        <b>Distance:</b> ${frame.distance.toFixed(3)}<br>
+                                        <b>Moment:</b> ${index + 1}/${info.keyframes.length}<br>
+                                        <a href="${frame.video_url}" target="_blank">Watch Video</a>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    });
+                }
 
-            document.getElementById('results').innerHTML = html;
+                document.getElementById('results').innerHTML = html || '<p>No results found</p>';
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
         }
     </script>
 </body>
